@@ -7,7 +7,7 @@ datasource db {
 }
 
 model Car {
-  id               Int     @id @default(autoincrement())
+  id               Int      @id @default(autoincrement())
   make             String
   model            String
   variant          String
@@ -20,16 +20,16 @@ model Car {
   seatingCapacity  Int
   engine           String
   imageUrl         String
-  pros             String  // JSON array stored as string
-  cons             String  // JSON array stored as string
+  pros             String
+  cons             String
   createdAt        DateTime @default(now())
 }
 
 model SearchHistory {
   id              Int      @id @default(autoincrement())
   query           String
-  preferences     String   // JSON stored as string
-  recommendations String   // JSON stored as string
+  preferences     String
+  recommendations String
   explanation     String
   createdAt       DateTime @default(now())
 }

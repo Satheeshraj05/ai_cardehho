@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Car Advisor 🚗
+
+An AI-powered full-stack web app that helps confused car buyers discover the best cars for their needs. Describe what you want in plain English and get intelligent, explainable recommendations instantly.
+
+## What did you build?
+
+A chat-style car recommendation engine for the Indian market. Users type natural language queries like _"Safe SUV for family of 4 under 15 lakh"_ and receive a ranked shortlist of top 5 cars with match scores, score breakdowns, AI-generated explanations, and a side-by-side comparison table.
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, TypeScript, Tailwind CSS, Zustand, React Query
+- **Backend**: Next.js API Routes
+- **Database**: SQLite via Prisma 7 + `@prisma/adapter-better-sqlite3`
+- **AI**: Mistral API (`mistral-small-latest`) for preference extraction and explanation generation
+- **UI**: Custom components with Radix UI primitives, `react-markdown` for rendered AI responses
 
 ## Getting Started
 
-First, run the development server:
+```bash
+npm install
+```
+
+Copy the example env file and add your Mistral API key:
+
+```bash
+cp .env.example .env
+# Edit .env and set MISTRAL_API_KEY
+```
+
+Seed the database with 51 Indian cars:
+
+```bash
+node prisma/seed.js
+```
+
+Run the dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | SQLite file path (default: `file:./dev.db`) |
+| `MISTRAL_API_KEY` | Your Mistral API key from [console.mistral.ai](https://console.mistral.ai) |
 
-## Learn More
+## How AI is Used
 
-To learn more about Next.js, take a look at the following resources:
+1. **Preference Extraction** — User's natural language query is sent to `mistral-small-latest` which returns structured JSON (budget, body type, fuel, transmission, family size, priority, usage type)
+2. **Recommendation Explanation** — After the scoring engine ranks cars, Mistral generates a conversational explanation of why the top cars were recommended
+3. **Fallback** — If the API is unavailable, regex-based extraction and template explanations keep the app functional
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Recommendation Algorithm
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Weighted scoring across 5 dimensions:
 
-## Deploy on Vercel
+| Factor | Default Weight | Safety Priority | Mileage Priority |
+|---|---|---|---|
+| Budget Match | 30% | 20% | 20% |
+| Safety Rating | 25% | 40% | 15% |
+| Mileage | 15% | 10% | 40% |
+| Preference Match | 20% | 20% | 15% |
+| Review Score | 10% | 10% | 10% |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Weights shift dynamically based on the user's stated priority.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## What was intentionally cut?
+
+- Authentication / user accounts
+- Voice input
+- Car detail pages
+- PDF export
+- Advanced animations
+- Complex dashboards
+
+MVP focus: working product with quality recommendations.
+
+## What would you build with another 4 hours?
+
+- Streaming AI responses so results appear progressively
+- Car detail pages with full specs and image gallery
+- Follow-up chat questions ("show me only automatics from that list")
+- Vercel deployment with edge-compatible DB (Turso/libSQL)
+- Favorites and compare saved lists

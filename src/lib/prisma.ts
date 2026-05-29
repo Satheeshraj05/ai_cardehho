@@ -1,6 +1,3 @@
-// Returns a fresh Prisma client reading env vars at call time
-// Never call this at module level — only inside request handlers
-
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { PrismaClient } = require("@prisma/client");
 
@@ -9,12 +6,11 @@ export function getPrismaClient() {
   const tursoToken = (process.env.TURSO_AUTH_TOKEN ?? "").trim();
 
   if (tursoUrl) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createClient } = require("@libsql/client");
+    // Pass config object directly — PrismaLibSql calls createClient internally
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaLibSql } = require("@prisma/adapter-libsql");
-    const turso = createClient({ url: tursoUrl, authToken: tursoToken });
-    return new PrismaClient({ adapter: new PrismaLibSql(turso) });
+    const adapter = new PrismaLibSql({ url: tursoUrl, authToken: tursoToken });
+    return new PrismaClient({ adapter });
   }
 
   // Local SQLite

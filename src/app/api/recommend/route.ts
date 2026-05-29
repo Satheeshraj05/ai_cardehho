@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { extractPreferences, generateExplanation } from "@/services/openaiService";
 import { rankCars } from "@/services/recommendationEngine";
 import { Car } from "@/lib/types";
@@ -15,6 +14,9 @@ function parseProsConsField(raw: unknown): string[] {
 }
 
 export async function POST(request: NextRequest) {
+  // Import prisma inside handler so it's created at request time, not build time
+  const { prisma } = await import("@/lib/prisma");
+
   try {
     const body = await request.json() as { query: string };
     const { query } = body;
@@ -25,26 +27,20 @@ export async function POST(request: NextRequest) {
 
     const trimmedQuery = query.trim();
 
-    // Step 1+2 in parallel: extract preferences AND fetch cars simultaneously
     const [preferences, dbCars] = await Promise.all([
       extractPreferences(trimmedQuery),
       prisma.car.findMany(),
     ]);
 
-    // Step 3: parse DB rows
     const cars: Car[] = dbCars.map((car) => ({
       ...car,
       pros: parseProsConsField(car.pros),
       cons: parseProsConsField(car.cons),
     }));
 
-    // Step 4: rank
     const recommendations = rankCars(cars, preferences);
-
-    // Step 5: explanation (after ranking so we can pass top results)
     const explanation = await generateExplanation(trimmedQuery, preferences, recommendations);
 
-    // Step 6: save history (fire-and-forget, don't block response)
     prisma.searchHistory.create({
       data: {
         query: trimmedQuery,
@@ -52,7 +48,7 @@ export async function POST(request: NextRequest) {
         recommendations: JSON.stringify(recommendations),
         explanation,
       },
-    }).catch((e) => console.error("History save failed:", e));
+    }).catch((e: unknown) => console.error("History save failed:", e));
 
     return NextResponse.json({ preferences, recommendations, explanation });
 

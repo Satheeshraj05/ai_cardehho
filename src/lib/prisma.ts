@@ -28,22 +28,5 @@ function createClient(): PrismaClient {
   return new PrismaClient({ adapter } as any);
 }
 
-// Getter — creates client on first access, not at import time
-let _prisma: PrismaClient | undefined;
-
-export function getPrisma(): PrismaClient {
-  if (!_prisma) {
-    _prisma = globalForPrisma.prisma ?? createClient();
-    if (process.env.NODE_ENV !== "production") {
-      globalForPrisma.prisma = _prisma;
-    }
-  }
-  return _prisma;
-}
-
-// Keep named export for backwards compat — but now it's a getter
-export const prisma = new Proxy({} as PrismaClient, {
-  get(_target, prop) {
-    return (getPrisma() as unknown as Record<string, unknown>)[prop as string];
-  },
-});
+export const prisma = globalForPrisma.prisma ?? createClient();
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

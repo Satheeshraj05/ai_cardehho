@@ -8,13 +8,13 @@ function createClient() {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createClient } = require("@libsql/client") as typeof import("@libsql/client");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaLibSQL } = require("@prisma/adapter-libsql") as typeof import("@prisma/adapter-libsql");
+    const { PrismaLibSql } = require("@prisma/adapter-libsql") as { PrismaLibSql: new (client: unknown) => unknown };
     const turso = createClient({
       url: process.env.TURSO_DATABASE_URL,
       authToken: process.env.TURSO_AUTH_TOKEN,
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return new PrismaClient({ adapter: new PrismaLibSQL(turso) } as any);
+    return new PrismaClient({ adapter: new PrismaLibSql(turso) } as any);
   }
 
   // Local SQLite (development)

@@ -4,6 +4,8 @@ import { extractPreferences, generateExplanation } from "@/services/openaiServic
 import { rankCars } from "@/services/recommendationEngine";
 import { Car } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
 function parseProsConsField(raw: unknown): string[] {
   if (Array.isArray(raw)) return raw as string[];
   if (typeof raw === "string") {

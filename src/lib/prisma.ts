@@ -2,16 +2,18 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
-function createClient() {
+function createClient(): PrismaClient {
+  const tursoUrl = process.env.TURSO_DATABASE_URL?.trim();
+
   // Turso (production / Vercel)
-  if (process.env.TURSO_DATABASE_URL) {
+  if (tursoUrl) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { createClient } = require("@libsql/client") as typeof import("@libsql/client");
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { PrismaLibSql } = require("@prisma/adapter-libsql") as { PrismaLibSql: new (client: unknown) => unknown };
     const turso = createClient({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN,
+      url: tursoUrl,
+      authToken: process.env.TURSO_AUTH_TOKEN?.trim(),
     });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return new PrismaClient({ adapter: new PrismaLibSql(turso) } as any);

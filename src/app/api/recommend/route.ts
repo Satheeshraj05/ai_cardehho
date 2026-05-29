@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getPrismaClient } from "@/lib/prisma";
 import { extractPreferences, generateExplanation } from "@/services/openaiService";
 import { rankCars } from "@/services/recommendationEngine";
 import { Car } from "@/lib/types";
@@ -14,8 +15,8 @@ function parseProsConsField(raw: unknown): string[] {
 }
 
 export async function POST(request: NextRequest) {
-  // Import prisma inside handler so it's created at request time, not build time
-  const { prisma } = await import("@/lib/prisma");
+  // Create client here — reads env vars at request time
+  const prisma = getPrismaClient();
 
   try {
     const body = await request.json() as { query: string };
@@ -32,7 +33,7 @@ export async function POST(request: NextRequest) {
       prisma.car.findMany(),
     ]);
 
-    const cars: Car[] = dbCars.map((car) => ({
+    const cars: Car[] = dbCars.map((car: Record<string, unknown>) => ({
       ...car,
       pros: parseProsConsField(car.pros),
       cons: parseProsConsField(car.cons),

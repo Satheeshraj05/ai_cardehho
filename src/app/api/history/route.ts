@@ -1,19 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getPrismaClient } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const { prisma } = await import("@/lib/prisma");
+  const prisma = getPrismaClient();
   try {
     const history = await prisma.searchHistory.findMany({
       orderBy: { createdAt: "desc" },
       take: 20,
     });
-    const parsed = history.map((item) => ({
+    const parsed = history.map((item: Record<string, unknown>) => ({
       ...item,
       preferences: JSON.parse(item.preferences as string),
       recommendations: JSON.parse(item.recommendations as string),
-      createdAt: item.createdAt.toISOString(),
+      createdAt: (item.createdAt as Date).toISOString(),
     }));
     return NextResponse.json(parsed);
   } catch (error) {
@@ -23,7 +24,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const { prisma } = await import("@/lib/prisma");
+  const prisma = getPrismaClient();
   try {
     const body = await request.json() as {
       query: string;
